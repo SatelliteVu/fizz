@@ -153,9 +153,9 @@ type Schema struct {
 	// definition but their definitions were adjusted to the
 	// OpenAPI Specification.
 	Type                 string                  `json:"type,omitempty" yaml:"type,omitempty"`
-	AllOf                *SchemaOrRef            `json:"allOf,omitempty" yaml:"allOf,omitempty"`
-	OneOf                *SchemaOrRef            `json:"oneOf,omitempty" yaml:"oneOf,omitempty"`
-	AnyOf                *SchemaOrRef            `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
+	AllOf                *[]SchemaOrRef          `json:"allOf,omitempty" yaml:"allOf,omitempty"`
+	OneOf                *[]SchemaOrRef          `json:"oneOf,omitempty" yaml:"oneOf,omitempty"`
+	AnyOf                *[]SchemaOrRef          `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
 	Items                *SchemaOrRef            `json:"items,omitempty" yaml:"items,omitempty"`
 	Properties           map[string]*SchemaOrRef `json:"properties,omitempty" yaml:"properties,omitempty"`
 	AdditionalProperties *SchemaOrRef            `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"`
@@ -203,7 +203,7 @@ type Operation struct {
 }
 
 // A workaround for missing omitnil functionality.
-// Explicitely omit the Security field from marshaling when it is nil, but not when empty.
+// Explicitly omit the Security field from marshaling when it is nil, but not when empty.
 type operationNilOmitted struct {
 	Tags         []string          `json:"tags,omitempty" yaml:"tags,omitempty"`
 	Summary      string            `json:"summary,omitempty" yaml:"summary,omitempty"`
