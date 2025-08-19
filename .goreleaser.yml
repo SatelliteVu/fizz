@@ -3,9 +3,7 @@ builds:
   - skip: true
 release:
   github:
-    owner: wI2L
+    owner: satellitevu
     name: fizz
   draft: true
   prerelease: auto
-env_files:
-  github_token: ~/.goreleaser_github_token
