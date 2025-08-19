@@ -25,14 +25,10 @@ jobs:
           - windows-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: Run tests
         run: ./ci/test.sh
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: coverage.txt
