@@ -275,6 +275,12 @@ func (g *Generator) AddOperation(path, method, tag string, in, out reflect.Type,
 		method != http.MethodHead &&
 		method != http.MethodDelete
 
+	// Collect extra params from info (if any)
+	var extraParams []*ExtraParam
+	if info != nil {
+		extraParams = info.ExtraParams
+	}
+
 	if in != nil {
 		if in.Kind() == reflect.Ptr {
 			in = in.Elem()
@@ -282,7 +288,12 @@ func (g *Generator) AddOperation(path, method, tag string, in, out reflect.Type,
 		if in.Kind() != reflect.Struct {
 			return nil, errors.New("input type is not a struct")
 		}
-		if err := g.setOperationParams(op, in, in, allowBody, path); err != nil {
+		if err := g.setOperationParams(op, in, in, allowBody, path, extraParams); err != nil {
+			return nil, err
+		}
+	} else if len(extraParams) > 0 {
+		// Even without an input type, we may have extra params to add
+		if err := g.setOperationParams(op, nil, nil, allowBody, path, extraParams); err != nil {
 			return nil, err
 		}
 	}
@@ -437,13 +448,47 @@ func (g *Generator) setOperationResponse(op *Operation, t reflect.Type, code, mt
 }
 
 // setOperationParams adds the fields of the struct type t
-// to the given operation.
-func (g *Generator) setOperationParams(op *Operation, t, parent reflect.Type, allowBody bool, path string) error {
-	if t.Kind() != reflect.Struct {
-		return errors.New("input type is not a struct")
+// to the given operation, along with any extra params provided.
+func (g *Generator) setOperationParams(op *Operation, t, parent reflect.Type, allowBody bool, path string, extraParams []*ExtraParam) error {
+	if t != nil {
+		if t.Kind() != reflect.Struct {
+			return errors.New("input type is not a struct")
+		}
+		if err := g.buildParamsRecursive(op, t, parent, allowBody); err != nil {
+			return err
+		}
 	}
-	if err := g.buildParamsRecursive(op, t, parent, allowBody); err != nil {
-		return err
+
+	// Add extra params (e.g., path params from parent routes)
+	for _, ep := range extraParams {
+		if ep == nil {
+			continue
+		}
+		// Check if a parameter with same name/location already exists
+		exists := false
+		for _, p := range op.Parameters {
+			if p != nil && p.Name == ep.Name && p.In == ep.In {
+				exists = true
+				break
+			}
+		}
+		if exists {
+			continue // Skip duplicate
+		}
+		// Path params are always required
+		required := ep.Required
+		if ep.In == "path" {
+			required = true
+		}
+		op.Parameters = append(op.Parameters, &ParameterOrRef{
+			Parameter: &Parameter{
+				Name:        ep.Name,
+				In:          ep.In,
+				Description: ep.Description,
+				Required:    required,
+				Schema:      &SchemaOrRef{Schema: &Schema{Type: "string"}},
+			},
+		})
 	}
 	// Input fields that are neither path- nor query-bound
 	// have been extracted into the operation's RequestBody

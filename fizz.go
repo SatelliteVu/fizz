@@ -401,6 +401,35 @@ func XInternal() func(*openapi.OperationInfo) {
 	}
 }
 
+// PathParam adds an extra path parameter to the operation.
+// This is useful when the path parameter is part of a parent route
+// and not defined in the handler's input model.
+// For example, when routes are defined under /v1/:contract_id/...,
+// the contract_id parameter needs to be declared in each operation.
+func PathParam(name, description string) func(*openapi.OperationInfo) {
+	return func(o *openapi.OperationInfo) {
+		o.ExtraParams = append(o.ExtraParams, &openapi.ExtraParam{
+			Name:        name,
+			In:          "path",
+			Description: description,
+			Required:    true,
+		})
+	}
+}
+
+// QueryParam adds an extra query parameter to the operation.
+// This is useful for query parameters not defined in the handler's input model.
+func QueryParam(name, description string, required bool) func(*openapi.OperationInfo) {
+	return func(o *openapi.OperationInfo) {
+		o.ExtraParams = append(o.ExtraParams, &openapi.ExtraParam{
+			Name:        name,
+			In:          "query",
+			Description: description,
+			Required:    required,
+		})
+	}
+}
+
 // OperationFromContext returns the OpenAPI operation from
 // the given Gin context or an error if none is found.
 func OperationFromContext(ctx context.Context) (*openapi.Operation, error) {

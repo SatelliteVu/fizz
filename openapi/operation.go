@@ -15,6 +15,17 @@ type OperationInfo struct {
 	Security          []*SecurityRequirement
 	XCodeSamples      []*XCodeSample
 	XInternal         bool
+	ExtraParams       []*ExtraParam // Additional parameters not derived from InputModel
+}
+
+// ExtraParam represents an additional parameter to include in the operation.
+// This is useful for path parameters that come from parent routes (e.g., /v1/:contract_id/...)
+// where the contract_id is not part of the handler's input model.
+type ExtraParam struct {
+	Name        string // Parameter name (e.g., "contract_id")
+	In          string // Parameter location: "path", "query", "header", "cookie"
+	Description string // Optional description
+	Required    bool   // Whether the parameter is required (always true for path params)
 }
 
 // ResponseHeader represents a single header that
